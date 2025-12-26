@@ -11,11 +11,11 @@ namespace SilverStripers\ElementalSearch\ORM\Search;
 use Exception;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Controllers\ContentController;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripers\ElementalSearch\Model\SearchDocument;
 use SilverStripe\ORM\Search\FulltextSearchable as SS_FulltextSearchable;
 
-class FulltextSearchable extends DataExtension
+class FulltextSearchable extends Extension
 {
 
     protected $searchFields;
