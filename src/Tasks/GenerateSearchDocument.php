@@ -9,57 +9,50 @@
 
 namespace SilverStripers\ElementalSearch\Tasks;
 
-
+use Exception;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripers\ElementalSearch\Extensions\ElementDocumentGeneratorExtension;
 use SilverStripers\ElementalSearch\Extensions\SearchDocumentGenerator;
 use SilverStripers\ElementalSearch\Extensions\SiteTreeDocumentGenerator;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 
 class GenerateSearchDocument extends BuildTask
 {
+    protected string $title = 'Re-generate all search documents';
 
-    protected $title = 'Re-generate all search documents';
-
-    protected $description = 'Generate search documents for items.';
+    protected static string $description = 'Generate search documents for items.';
 
     private static $segment = 'make-search-docs';
 
-    /**
-     * Implement this method in the task subclass to
-     * execute via the TaskRunner
-     *
-     * @param HTTPRequest $request
-     * @return
-     */
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
-        $eol = Director::is_cli() ? PHP_EOL . PHP_EOL : '<br>';
         set_time_limit(50000);
         $classes = $this->getAllSearchDocClasses();
         foreach ($classes as $class) {
             foreach ($list = DataList::create($class) as $record) {
-				$output = sprintf(
-						'Making record for %s type %s, link %s',
-						$record->getTitle(),
-						$record->ClassName,
-						ClassInfo::hasMethod($record, 'getGenerateSearchLink') ? $record->getGenerateSearchLink() : $record->Title);
+                $msg = sprintf(
+                    'Making record for %s type %s, link %s',
+                    $record->getTitle(),
+                    $record->ClassName,
+                    ClassInfo::hasMethod($record, 'getGenerateSearchLink') ? $record->getGenerateSearchLink() : $record->Title
+                );
 
-                $output .= $eol;
-
-                echo $output;
-				try {
-					SearchDocumentGenerator::make_document_for($record);
-				} catch (Exception $e) {
-				}
+                $output->writeln($msg);
+                try {
+                    SearchDocumentGenerator::make_document_for($record);
+                } catch (Exception $e) {
+                }
             }
         }
-        echo 'Completed';
+        $output->writeln('Completed');
+        return Command::SUCCESS;
     }
 
     public function getAllSearchDocClasses()
